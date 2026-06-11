@@ -220,5 +220,3 @@ Distribuído sob a licença MIT. Consulte o arquivo `LICENSE` para mais detalhes
 
 > Roblox é uma marca registrada da Roblox Corporation. Este é um projeto
 > acadêmico independente, sem qualquer vínculo ou endosso oficial.
-#   c o n s u l t a - r o b l o x - a p i  
- 
