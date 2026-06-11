@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox Presence Console</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-2: #1c2230;
+    --line: #283040;
+    --txt: #e6edf3;
+    --txt-dim: #8b97a7;
+    --txt-faint: #5b6675;
+    --accent: #4d8df7;
+    --online: #3fb950;
+    --ingame: #4d8df7;
+    --studio: #d29922;
+    --offline: #6e7681;
+    --danger: #f85149;
+    --mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, Menlo, monospace;
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: 0 16px 64px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header { padding: 28px 0 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .glyph {
+    width: 22px; height: 22px; border-radius: 5px;
+    background: var(--accent); transform: rotate(12deg);
+    box-shadow: 0 0 0 3px rgba(77,141,247,.15);
+  }
+  .brand h1 { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+  .brand .sub { font-family: var(--mono); font-size: 11px; color: var(--txt-faint); margin-top: 2px; }
+
+  .searchbar { display: flex; gap: 8px; margin-top: 20px; }
+  .searchbar input {
+    flex: 1; background: var(--panel); border: 1px solid var(--line);
+    color: var(--txt); padding: 11px 14px; border-radius: 9px;
+    font-size: 14px; font-family: var(--sans); outline: none;
+  }
+  .searchbar input:focus { border-color: var(--accent); }
+  .searchbar button {
+    background: var(--accent); color: #fff; border: none;
+    padding: 0 18px; border-radius: 9px; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: filter .15s;
+  }
+  .searchbar button:hover { filter: brightness(1.1); }
+  .searchbar button:disabled { opacity: .5; cursor: not-allowed; }
+
+  .hint { font-size: 12px; color: var(--txt-faint); margin-top: 8px; font-family: var(--mono); }
+
+  .state { text-align: center; padding: 56px 0; color: var(--txt-dim); font-size: 14px; }
+  .state.err { color: var(--danger); font-family: var(--mono); font-size: 13px; }
+
+  /* Status hero */
+  .hero {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 18px; margin-top: 24px;
+  }
+  .hero img { width: 72px; height: 72px; border-radius: 12px; background: var(--panel-2); flex-shrink: 0; }
+  .hero .who { flex: 1; min-width: 0; }
+  .hero .name { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+  .hero .uname { font-family: var(--mono); font-size: 12px; color: var(--txt-dim); }
+  .statuschip {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 600; padding: 5px 11px;
+    border-radius: 99px; margin-top: 8px; font-family: var(--mono);
+    border: 1px solid var(--line);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot.live { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{ box-shadow:0 0 0 0 currentColor; opacity:1 } 50%{ box-shadow:0 0 0 4px transparent; opacity:.6 } }
+
+  .grid { display: grid; gap: 14px; margin-top: 14px; }
+  @media (min-width: 620px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .card h2 {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--txt-dim); margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card h2 .count { font-family: var(--mono); color: var(--txt-faint); }
+
+  .kv { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--txt-dim); }
+  .kv .v { font-family: var(--mono); text-align: right; word-break: break-all; }
+  .v.muted { color: var(--txt-faint); }
+
+  .notice {
+    background: var(--panel-2); border: 1px dashed var(--line);
+    border-radius: 9px; padding: 10px 12px; font-size: 12px;
+    color: var(--txt-dim); margin-top: 10px; line-height: 1.45;
+  }
+
+  .list { display: flex; flex-direction: column; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .row:last-child { border-bottom: none; }
+  .row .av { width: 26px; height: 26px; border-radius: 6px; background: var(--panel-2); display: grid; place-items: center; font-size: 11px; color: var(--txt-faint); font-family: var(--mono); flex-shrink: 0; }
+  .row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .id { font-family: var(--mono); font-size: 11px; color: var(--txt-faint); }
+  .empty { font-size: 13px; color: var(--txt-faint); padding: 6px 0; }
+
+  /* timeline */
+  .tl { position: relative; padding-left: 18px; }
+  .tl::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 1px; background: var(--line); }
+  .ev { position: relative; padding: 6px 0 12px; }
+  .ev::before { content: ""; position: absolute; left: -17px; top: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--offline); border: 2px solid var(--bg); }
+  .ev .st { font-size: 13px; font-weight: 600; }
+  .ev .loc { font-size: 12px; color: var(--txt-dim); }
+  .ev .ts { font-family: var(--mono); font-size: 11px; color: var(--txt-faint); margin-top: 1px; }
+
+  footer { text-align: center; margin-top: 36px; font-size: 11px; color: var(--txt-faint); font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="glyph"></div>
+      <div>
+        <h1>Presence Console</h1>
+        <div class="sub">roblox activity tracker</div>
+      </div>
+    </div>
+    <div class="searchbar">
+      <input id="q" placeholder="username ou ID (ex: Roblox ou 1)" autocomplete="off">
+      <button id="go">Buscar</button>
+    </div>
+    <div class="hint" id="apihint">API: <span id="apibase"></span></div>
+  </header>
+
+  <div id="out"><div class="state">Digite um username ou ID pra começar.</div></div>
+
+  <footer>Presence Console · dados públicos via API oficial do Roblox</footer>
+</div>
+
+<script>
+const API = window.location.origin;
+document.getElementById("apibase").textContent = API;
+
+const $ = (id) => document.getElementById(id);
+const out = $("out");
+
+const STATUS = {
+  "in-game": { label: "Em jogo",   color: "var(--ingame)",  live: true },
+  "online":  { label: "Online",    color: "var(--online)",  live: true },
+  "studio":  { label: "No Studio", color: "var(--studio)",  live: true },
+  "offline": { label: "Offline",   color: "var(--offline)", live: false },
+  "unknown": { label: "Desconhecido", color: "var(--offline)", live: false },
+};
+
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const fmt = (iso) => { if (!iso) return "—"; const d = new Date(iso); return isNaN(d) ? "—" : d.toLocaleString("pt-BR"); };
+
+async function getJSON(path) {
+  const r = await fetch(API + path);
+  if (!r.ok) {
+    let msg = "HTTP " + r.status;
+    try { const j = await r.json(); if (j.error) msg = j.error; } catch {}
+    throw new Error(msg);
+  }
+  return r.json();
+}
+
+async function search() {
+  const id = $("q").value.trim();
+  if (!id) return;
+  $("go").disabled = true;
+  out.innerHTML = '<div class="state">Consultando…</div>';
+  try {
+    const enc = encodeURIComponent(id);
+    // perfil resolve username->id; demais usam o mesmo identificador
+    const [profile, activity, friends, games] = await Promise.all([
+      getJSON(`/user/${enc}`),
+      getJSON(`/user/${enc}/activity`).catch(() => null),
+      getJSON(`/user/${enc}/friends`).catch(() => ({ count: 0, list: [] })),
+      getJSON(`/user/${enc}/games`).catch(() => ({ created: [], favorites: [] })),
+    ]);
+    render({ profile, activity, friends, games });
+  } catch (e) {
+    out.innerHTML = `<div class="state err">Erro: ${esc(e.message)}</div>`;
+  } finally {
+    $("go").disabled = false;
+  }
+}
+
+function render({ profile, activity, friends, games }) {
+  const st = STATUS[activity?.status ?? "unknown"] ?? STATUS.unknown;
+  const avatar = profile.avatar
+    ? `<img src="${esc(profile.avatar)}" alt="avatar">`
+    : `<div class="hero" style="width:72px;height:72px"></div>`;
+
+  const created = games?.created ?? [];
+  const favorites = games?.favorites ?? [];
+  const allGames = [...created.map(g => ({...g, tag:"criado"})), ...favorites.map(g => ({...g, tag:"favorito"}))];
+  const history = (activity?.history ?? []).slice().reverse();
+
+  // bloco do servidor atual — honesto sobre visibilidade
+  let serverBlock;
+  if (activity?.serverVisible && activity?.currentServer) {
+    serverBlock = `
+      <div class="kv"><span class="k">Servidor atual</span><span class="v">${esc(activity.currentServer)}</span></div>
+      <div class="kv"><span class="k">Place ID</span><span class="v">${esc(activity.placeId ?? "—")}</span></div>`;
+  } else {
+    serverBlock = `
+      <div class="kv"><span class="k">Servidor atual</span><span class="v muted">não visível</span></div>
+      <div class="notice">O servidor exato só aparece com autenticação (cookie de uma conta) e se este jogador permitir ver a presença dele — em geral, ser amigo. Sem isso, o Roblox não expõe o servidor.</div>`;
+  }
+
+  out.innerHTML = `
+    <div class="hero">
+      ${avatar}
+      <div class="who">
+        <div class="name">${esc(profile.displayName || profile.name)}</div>
+        <div class="uname">@${esc(profile.name)} · #${esc(profile.id)}</div>
+        <span class="statuschip" style="color:${st.color}">
+          <span class="dot ${st.live ? "live" : ""}" style="background:${st.color}"></span>${st.label}
+        </span>
+      </div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h2>Atividade</h2>
+        <div class="kv"><span class="k">Status</span><span class="v" style="color:${st.color}">${st.label}</span></div>
+        <div class="kv"><span class="k">Jogo atual</span><span class="v ${activity?.currentGame ? "" : "muted"}">${esc(activity?.currentGame || "—")}</span></div>
+        ${serverBlock}
+        <div class="kv"><span class="k">Visto por último</span><span class="v">${fmt(activity?.lastOnline)}</span></div>
+        <div class="kv"><span class="k">Verificado em</span><span class="v">${fmt(activity?.checkedAt)}</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Perfil</h2>
+        <div class="kv"><span class="k">ID</span><span class="v">${esc(profile.id)}</span></div>
+        <div class="kv"><span class="k">Criado em</span><span class="v">${fmt(profile.created)}</span></div>
+        <div class="kv"><span class="k">Banido</span><span class="v">${profile.isBanned ? "sim" : "não"}</span></div>
+        ${profile.description ? `<div class="kv"><span class="k">Bio</span><span class="v" style="max-width:60%">${esc(profile.description).slice(0,120)}</span></div>` : ""}
+      </div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h2>Amigos <span class="count">${esc(friends?.count ?? 0)}</span></h2>
+        <div class="list">
+          ${(friends?.list ?? []).slice(0, 12).map(f => `
+            <div class="row">
+              <div class="av">${esc((f.displayName||f.name||"?").slice(0,2).toUpperCase())}</div>
+              <div class="nm">${esc(f.displayName || f.name)}</div>
+              <div class="id">#${esc(f.id)}</div>
+            </div>`).join("") || '<div class="empty">Nenhum amigo público.</div>'}
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Jogos <span class="count">${esc(allGames.length)}</span></h2>
+        <div class="list">
+          ${allGames.slice(0, 12).map(g => `
+            <div class="row">
+              <div class="nm">${esc(g.name)}</div>
+              <div class="id">${esc(g.tag)}</div>
+            </div>`).join("") || '<div class="empty">Nenhum jogo público.</div>'}
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Histórico de atividade <span class="count">${esc(history.length)} eventos</span></h2>
+      ${history.length ? `<div class="tl">${history.slice(0, 20).map(ev => {
+        const s = STATUS[ev.status] ?? STATUS.unknown;
+        return `<div class="ev">
+          <div class="st" style="color:${s.color}">${s.label}</div>
+          ${ev.lastLocation ? `<div class="loc">${esc(ev.lastLocation)}</div>` : ""}
+          <div class="ts">${fmt(ev.at)}</div>
+        </div>`;
+      }).join("")}</div>` : '<div class="empty">Sem histórico ainda. Ele cresce a cada consulta, registrando mudanças de status ao longo do tempo.</div>'}
+    </div>
+  `;
+}
+
+$("go").addEventListener("click", search);
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+</script>
+</body>
+</html>
