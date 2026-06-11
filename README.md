@@ -125,7 +125,7 @@ Pré-requisitos: Node.js 18 ou superior.
 ```bash
 # clonar o repositório
 git clone https://github.com/ifelix081/consulta-roblox-api.git
-cd presence-console
+cd consulta-roblox-api
 
 # instalar dependências
 npm install
@@ -211,9 +211,8 @@ as configurações de privacidade da plataforma:
 Projeto desenvolvido para fins acadêmicos no curso de Análise e Desenvolvimento
 de Sistemas.
 
-- **Autor:** _preencher_
-- **Disciplina / Período:** _preencher_
-- **Instituição:** _preencher_
+- **Autor:** _Italo Vinicius & Eduardo Alves_
+- **Instituição:** _FICR_
 
 ## Licença
 
@@ -221,3 +220,5 @@ Distribuído sob a licença MIT. Consulte o arquivo `LICENSE` para mais detalhes
 
 > Roblox é uma marca registrada da Roblox Corporation. Este é um projeto
 > acadêmico independente, sem qualquer vínculo ou endosso oficial.
+#   c o n s u l t a - r o b l o x - a p i  
+ 
